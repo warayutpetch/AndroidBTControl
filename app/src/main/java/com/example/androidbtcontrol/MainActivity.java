@@ -17,6 +17,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -29,6 +30,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.net.Uri;
+import android.media.RingtoneManager;
+import android.media.Ringtone;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,17 +49,19 @@ public class MainActivity extends ActionBarActivity {
     BluetoothAdapter bluetoothAdapter;
 
     ArrayList<BluetoothDevice> pairedDeviceArrayList;
-
-    TextView textInfo, textStatus,textTest;
+    Uri uriAlarm;
+    Ringtone ringTone;
+    TextView textInfo, textStatus, textTest;
     ListView listViewPairedDevice;
     LinearLayout inputPane;
     EditText inputField;
     Button btnSend;
-    View view1;
+    View leftTop, topCenter, rightTop, leftCenter, centerLeft, center, centerRight, rightCenter, leftBot, centerBot, rightBot;
     ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;
+
     private UUID myUUID;
     private final String UUID_STRING_WELL_KNOWN_SPP =
-        "00001101-0000-1000-8000-00805F9B34FB";
+            "00001101-0000-1000-8000-00805F9B34FB";
 
     ThreadConnectBTdevice myThreadConnectBTdevice;
     ThreadConnected myThreadConnected;
@@ -65,24 +71,25 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textInfo = (TextView)findViewById(R.id.info);
-        textStatus = (TextView)findViewById(R.id.status);
-        listViewPairedDevice = (ListView)findViewById(R.id.pairedlist);
+        textInfo = (TextView) findViewById(R.id.info);
+        textStatus = (TextView) findViewById(R.id.status);
+        listViewPairedDevice = (ListView) findViewById(R.id.pairedlist);
 
-        inputPane = (LinearLayout)findViewById(R.id.inputpane);
-        inputField = (EditText)findViewById(R.id.input);
-        btnSend = (Button)findViewById(R.id.send);
-        btnSend.setOnClickListener(new View.OnClickListener(){
+        inputPane = (LinearLayout) findViewById(R.id.inputpane);
+        inputField = (EditText) findViewById(R.id.input);
+        btnSend = (Button) findViewById(R.id.send);
+        btnSend.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                if(myThreadConnected!=null){
+                if (myThreadConnected != null) {
                     byte[] bytesToSend = inputField.getText().toString().getBytes();
                     myThreadConnected.write(bytesToSend);
                 }
-            }});
+            }
+        });
 
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)){
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
             Toast.makeText(this,
                     "FEATURE_BLUETOOTH NOT support",
                     Toast.LENGTH_LONG).show();
@@ -124,7 +131,7 @@ public class MainActivity extends ActionBarActivity {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         for (BluetoothDevice pairedDevice : bluetoothAdapter.getBondedDevices()) {
 
-            Log.d("log", "\tDevice Name: " +  pairedDevice.getName());
+            Log.d("log", "\tDevice Name: " + pairedDevice.getName());
             Log.d("log", "\tDevice MAC: " + pairedDevice.getAddress());
 
         }
@@ -133,7 +140,7 @@ public class MainActivity extends ActionBarActivity {
 
             for (BluetoothDevice device : pairedDevices) {
                 pairedDeviceArrayList.add(device);
-                Log.e("ssss",pairedDevices.toString());
+                Log.e("ssss", pairedDevices.toString());
             }
 
             pairedDeviceAdapter = new ArrayAdapter<BluetoothDevice>(this,
@@ -167,17 +174,17 @@ public class MainActivity extends ActionBarActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if(myThreadConnectBTdevice!=null){
+        if (myThreadConnectBTdevice != null) {
             myThreadConnectBTdevice.cancel();
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode==REQUEST_ENABLE_BT){
-            if(resultCode == Activity.RESULT_OK){
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == Activity.RESULT_OK) {
                 setup();
-            }else{
+            } else {
                 Toast.makeText(this,
                         "BlueTooth NOT enabled",
                         Toast.LENGTH_SHORT).show();
@@ -188,7 +195,7 @@ public class MainActivity extends ActionBarActivity {
 
     //Called in ThreadConnectBTdevice once connect successed
     //to start ThreadConnected
-    private void startThreadConnected(BluetoothSocket socket){
+    private void startThreadConnected(BluetoothSocket socket) {
 
         myThreadConnected = new ThreadConnected(socket);
         myThreadConnected.start();
@@ -242,27 +249,48 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
 
-            if(success){
+            if (success) {
                 //connect successful
                 final String msgconnected = "connect successful:\n"
                         + "BluetoothSocket: " + bluetoothSocket + "\n"
                         + "BluetoothDevice: " + bluetoothDevice;
 
-                runOnUiThread(new Runnable(){
+                runOnUiThread(new Runnable() {
 
                     @Override
                     public void run() {
-                        textStatus.setText(msgconnected);
-                        setContentView(R.layout.activity_about);
-                        view1 = (View)findViewById(R.id.view1);
+                        try {
+                            textStatus.setText(msgconnected);
 
-//                        textTest = (TextView)findViewById(R.id.textView);
-                        listViewPairedDevice.setVisibility(View.GONE);
-                        inputPane.setVisibility(View.VISIBLE);
-                    }});
+                            setContentView(R.layout.activity_about);
+
+                            leftTop = (View) findViewById(R.id.leftTop);
+                            topCenter = (View) findViewById(R.id.topCenter);
+                            rightTop = (View) findViewById(R.id.rightTop);
+                            leftCenter = (View) findViewById(R.id.leftCenter);
+                            centerLeft = (View) findViewById(R.id.centerLeft);
+                            center = (View) findViewById(R.id.center);
+                            centerRight = (View) findViewById(R.id.centerRight);
+                            rightCenter = (View) findViewById(R.id.rightCenter);
+                            leftBot = (View) findViewById(R.id.leftBot);
+                            centerBot = (View) findViewById(R.id.centerBot);
+                            rightBot = (View) findViewById(R.id.rightBot);
+                            textTest = (TextView) findViewById(R.id.textView2);
+                            //  leftTop,topCenter,rightTop,leftCenter,centerLeft,center,centerRight,rightCenter,leftBot,centerBot,rightBot
+
+                            listViewPairedDevice.setVisibility(View.GONE);
+                            inputPane.setVisibility(View.VISIBLE);
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(),
+                                    "Error Open Again",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
 
                 startThreadConnected(bluetoothSocket);
-            }else{
+
+            } else {
                 //fail
             }
         }
@@ -319,7 +347,7 @@ public class MainActivity extends ActionBarActivity {
             while (true) {
                 try {
                     bytes = connectedInputStream.read(buffer);
-                   final String strReceived = new String(buffer, 0, bytes);
+                    final String strReceived = new String(buffer, 0, bytes);
 //                    final String msgReceived = String.valueOf(bytes) +
 //                            " bytes received:\n"
 //                            + strReceived;
@@ -327,21 +355,200 @@ public class MainActivity extends ActionBarActivity {
                             " bytes received:\n"
                             + strReceived;
 
-                    runOnUiThread(new Runnable(){
-///////recive
+                    runOnUiThread(new Runnable() {
+                        ///////recive
+                        boolean play = false;
                         @Override
                         public void run() {
-                            if (Integer.parseInt(strReceived) == 35) {
+                            //  leftTop,topCenter,rightTop,leftCenter,centerLeft,center,centerRight,rightCenter,leftBot,centerBot,rightBot
 
-                                textTest.setText(strReceived);
-                                view1.setBackgroundColor(Color.parseColor("#fd3a38"));
-                            } else {
+                            textTest.setText(strReceived);
+                            uriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
 
-                                textTest.setText(strReceived);
-                                view1.setBackgroundColor(Color.parseColor("#4422dd"));
+                            ringTone = RingtoneManager
+                                    .getRingtone(getApplicationContext(), uriAlarm);
+                            if (strReceived.equals("a")) {
+                                leftTop.setBackgroundColor(Color.parseColor("#fd3a38"));
                             }
+
+                            if (strReceived.equals("b")) {
+                                leftTop.setBackgroundColor(Color.parseColor("#4422dd"));
+
+                            }
+
+
+                            if (strReceived.equals("m")) {
+                                topCenter.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("n")) {
+                                topCenter.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("g")) {
+                                rightTop.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("h")) {
+                                rightTop.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("c")) {
+                                leftCenter.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("d")) {
+                                leftCenter.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("s")) {
+                                centerLeft.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("t")) {
+                                centerLeft.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("q")) {
+                                center.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("r")) {
+                                center.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("u")) {
+                                centerRight.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("v")) {
+                                centerRight.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("i")) {
+                                rightCenter.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("j")) {
+                                rightCenter.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("e")) {
+                                leftBot.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("f")) {
+                                leftBot.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("o")) {
+                                centerBot.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("p")) {
+                                centerBot.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+
+                            if (strReceived.equals("k")) {
+                                rightBot.setBackgroundColor(Color.parseColor("#fd3a38"));
+                            }
+
+                            if (strReceived.equals("l")) {
+                                rightBot.setBackgroundColor(Color.parseColor("#4422dd"));
+                            }
+                            if (strReceived.equals("L")) {
+                               setContentView(R.layout.notification);
+                                if(!ringTone.isPlaying()){
+                                    ringTone.play();
+                                }
+                                Button buttonBack = (Button) findViewById(R.id.bt_back);
+
+                                buttonBack.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        play = !play;
+                                        ringTone.stop();
+
+                                        setContentView(R.layout.activity_about);
+                                        leftTop = (View) findViewById(R.id.leftTop);
+                                        topCenter = (View) findViewById(R.id.topCenter);
+                                        rightTop = (View) findViewById(R.id.rightTop);
+                                        leftCenter = (View) findViewById(R.id.leftCenter);
+                                        centerLeft = (View) findViewById(R.id.centerLeft);
+                                        center = (View) findViewById(R.id.center);
+                                        centerRight = (View) findViewById(R.id.centerRight);
+                                        rightCenter = (View) findViewById(R.id.rightCenter);
+                                        leftBot = (View) findViewById(R.id.leftBot);
+                                        centerBot = (View) findViewById(R.id.centerBot);
+                                        rightBot = (View) findViewById(R.id.rightBot);
+                                        textTest = (TextView) findViewById(R.id.textView2);
+                                    }
+                                });
+                            }
+                            if (strReceived.equals("M")) {
+                                setContentView(R.layout.notification);
+                                if(!ringTone.isPlaying()){
+                                    ringTone.play();
+                                }
+                                Button buttonBack = (Button) findViewById(R.id.bt_back);
+                                buttonBack.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        play = !play;
+
+                                        ringTone.stop();
+
+                                        setContentView(R.layout.activity_about);
+                                        leftTop = (View) findViewById(R.id.leftTop);
+                                        topCenter = (View) findViewById(R.id.topCenter);
+                                        rightTop = (View) findViewById(R.id.rightTop);
+                                        leftCenter = (View) findViewById(R.id.leftCenter);
+                                        centerLeft = (View) findViewById(R.id.centerLeft);
+                                        center = (View) findViewById(R.id.center);
+                                        centerRight = (View) findViewById(R.id.centerRight);
+                                        rightCenter = (View) findViewById(R.id.rightCenter);
+                                        leftBot = (View) findViewById(R.id.leftBot);
+                                        centerBot = (View) findViewById(R.id.centerBot);
+                                        rightBot = (View) findViewById(R.id.rightBot);
+                                        textTest = (TextView) findViewById(R.id.textView2);
+                                    }
+                                });
+                            }
+                            if (strReceived.equals("R")) {
+                                setContentView(R.layout.notification);
+
+                                if(!ringTone.isPlaying()){
+                                    ringTone.play();
+                                }
+                                play = !play;
+                                Button buttonBack = (Button) findViewById(R.id.bt_back);
+                                buttonBack.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+
+                                        ringTone.stop();
+
+                                        setContentView(R.layout.activity_about);
+                                        leftTop = (View) findViewById(R.id.leftTop);
+                                        topCenter = (View) findViewById(R.id.topCenter);
+                                        rightTop = (View) findViewById(R.id.rightTop);
+                                        leftCenter = (View) findViewById(R.id.leftCenter);
+                                        centerLeft = (View) findViewById(R.id.centerLeft);
+                                        center = (View) findViewById(R.id.center);
+                                        centerRight = (View) findViewById(R.id.centerRight);
+                                        rightCenter = (View) findViewById(R.id.rightCenter);
+                                        leftBot = (View) findViewById(R.id.leftBot);
+                                        centerBot = (View) findViewById(R.id.centerBot);
+                                        rightBot = (View) findViewById(R.id.rightBot);
+                                        textTest = (TextView) findViewById(R.id.textView2);
+                                    }
+                                });
+                            }
+
                             //                            textStatus.setText(msgReceived);
-                        }});
+                        }
+
+                    });
 
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
@@ -349,12 +556,13 @@ public class MainActivity extends ActionBarActivity {
 
                     final String msgConnectionLost = "Connection lost:\n"
                             + e.getMessage();
-                    runOnUiThread(new Runnable(){
+                    runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
                             textStatus.setText(msgConnectionLost);
-                        }});
+                        }
+                    });
                 }
             }
         }
