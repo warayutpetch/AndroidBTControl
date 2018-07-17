@@ -26,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -51,14 +52,14 @@ public class MainActivity extends ActionBarActivity {
     ArrayList<BluetoothDevice> pairedDeviceArrayList;
     Uri uriAlarm;
     Ringtone ringTone;
-    TextView textInfo, textStatus, textTest;
+    TextView textInfo, textStatus, textTest, textResult;
     ListView listViewPairedDevice;
     LinearLayout inputPane;
     EditText inputField;
     Button btnSend;
     View leftTop, topCenter, rightTop, leftCenter, centerLeft, center, centerRight, rightCenter, leftBot, centerBot, rightBot;
     ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;
-
+    ImageView mImageView;
     private UUID myUUID;
     private final String UUID_STRING_WELL_KNOWN_SPP =
             "00001101-0000-1000-8000-00805F9B34FB";
@@ -74,6 +75,10 @@ public class MainActivity extends ActionBarActivity {
         textInfo = (TextView) findViewById(R.id.info);
         textStatus = (TextView) findViewById(R.id.status);
         listViewPairedDevice = (ListView) findViewById(R.id.pairedlist);
+
+        uriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        ringTone = RingtoneManager
+                .getRingtone(getApplicationContext(), uriAlarm);
 
         inputPane = (LinearLayout) findViewById(R.id.inputpane);
         inputField = (EditText) findViewById(R.id.input);
@@ -358,15 +363,13 @@ public class MainActivity extends ActionBarActivity {
                     runOnUiThread(new Runnable() {
                         ///////recive
                         boolean play = false;
+
                         @Override
                         public void run() {
                             //  leftTop,topCenter,rightTop,leftCenter,centerLeft,center,centerRight,rightCenter,leftBot,centerBot,rightBot
 
                             textTest.setText(strReceived);
-                            uriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
 
-                            ringTone = RingtoneManager
-                                    .getRingtone(getApplicationContext(), uriAlarm);
                             if (strReceived.equals("a")) {
                                 leftTop.setBackgroundColor(Color.parseColor("#fd3a38"));
                             }
@@ -456,10 +459,14 @@ public class MainActivity extends ActionBarActivity {
                             if (strReceived.equals("l")) {
                                 rightBot.setBackgroundColor(Color.parseColor("#4422dd"));
                             }
-                            if (strReceived.equals("L")) {
-                               setContentView(R.layout.notification);
-                                if(!ringTone.isPlaying()){
+                            if (strReceived.equals("L") && !play) {
+                                setContentView(R.layout.activity_notification);
+                                textResult = (TextView) findViewById(R.id.textRes);
+                                textResult.setText("พลิกตัวไปทางซ้าย");
+                                if (!ringTone.isPlaying()) {
                                     ringTone.play();
+                                }else {
+                                    ringTone.stop();
                                 }
                                 Button buttonBack = (Button) findViewById(R.id.bt_back);
 
@@ -485,10 +492,14 @@ public class MainActivity extends ActionBarActivity {
                                     }
                                 });
                             }
-                            if (strReceived.equals("M")) {
-                                setContentView(R.layout.notification);
-                                if(!ringTone.isPlaying()){
+                            if (strReceived.equals("M") && !play) {
+                                setContentView(R.layout.activity_notification);
+                                textResult = (TextView) findViewById(R.id.textRes);
+                                textResult.setText("พลิกตัวท่านอนหงาย");
+                                if (!ringTone.isPlaying()) {
                                     ringTone.play();
+                                }else {
+                                    ringTone.stop();
                                 }
                                 Button buttonBack = (Button) findViewById(R.id.bt_back);
                                 buttonBack.setOnClickListener(new View.OnClickListener() {
@@ -514,18 +525,22 @@ public class MainActivity extends ActionBarActivity {
                                     }
                                 });
                             }
-                            if (strReceived.equals("R")) {
-                                setContentView(R.layout.notification);
 
-                                if(!ringTone.isPlaying()){
+                            if (strReceived.equals("R") && !play) {
+                                setContentView(R.layout.activity_notification);
+                                textResult = (TextView) findViewById(R.id.textRes);
+                                textResult.setText("พลิกตัวไปทางขวา");
+                                if (!ringTone.isPlaying()) {
                                     ringTone.play();
+                                }else{
+                                    ringTone.stop();
                                 }
-                                play = !play;
+
                                 Button buttonBack = (Button) findViewById(R.id.bt_back);
                                 buttonBack.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-
+                                        play = !play;
                                         ringTone.stop();
 
                                         setContentView(R.layout.activity_about);
@@ -543,6 +558,26 @@ public class MainActivity extends ActionBarActivity {
                                         textTest = (TextView) findViewById(R.id.textView2);
                                     }
                                 });
+                            }
+
+                            if (strReceived.equals("E")) {
+
+
+                                setContentView(R.layout.activity_about);
+                                ringTone.stop();
+                                leftTop = (View) findViewById(R.id.leftTop);
+                                topCenter = (View) findViewById(R.id.topCenter);
+                                rightTop = (View) findViewById(R.id.rightTop);
+                                leftCenter = (View) findViewById(R.id.leftCenter);
+                                centerLeft = (View) findViewById(R.id.centerLeft);
+                                center = (View) findViewById(R.id.center);
+                                centerRight = (View) findViewById(R.id.centerRight);
+                                rightCenter = (View) findViewById(R.id.rightCenter);
+                                leftBot = (View) findViewById(R.id.leftBot);
+                                centerBot = (View) findViewById(R.id.centerBot);
+                                rightBot = (View) findViewById(R.id.rightBot);
+                                textTest = (TextView) findViewById(R.id.textView2);
+
                             }
 
                             //                            textStatus.setText(msgReceived);
