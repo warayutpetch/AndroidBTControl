@@ -22,6 +22,10 @@
         </activity>
         <activity android:name=".AboutActivity">
         </activity>
+        <activity android:name=".View1">
+        </activity>
+        <activity android:name=".MainMenuActivity"></activity>
+        <activity android:name=".ShowDetailActivity"></activity>
     </application>
 
 </manifest>

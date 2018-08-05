@@ -11,7 +11,7 @@ public class Splash extends Activity {
     Handler handler;
     Runnable runnable;
     long delay_time;
-    long time = 3000L;
+    long time = 1500L;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,7 +21,7 @@ public class Splash extends Activity {
 
         runnable = new Runnable() {
             public void run() {
-                Intent intent = new Intent(Splash.this, MainActivity.class);
+                Intent intent = new Intent(Splash.this, View1.class);
                 startActivity(intent);
                 finish();
             }
