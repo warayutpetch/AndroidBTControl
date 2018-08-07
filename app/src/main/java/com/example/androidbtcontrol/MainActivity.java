@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -60,7 +62,7 @@ public class MainActivity extends ActionBarActivity {
     EditText inputField;
     Button btnSend;
     View leftTop, topCenter, rightTop, leftCenter, centerLeft, center, centerRight, rightCenter, leftBot, centerBot, rightBot;
-    ArrayAdapter<BluetoothDevice> pairedDeviceAdapter;
+    ArrayAdapter<String> pairedDeviceAdapter;
     ImageView mImageView;
     private UUID myUUID;
     private final String UUID_STRING_WELL_KNOWN_SPP =
@@ -137,7 +139,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setup() {
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+       final Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         for (BluetoothDevice pairedDevice : bluetoothAdapter.getBondedDevices()) {
 
             Log.d("log", "\tDevice Name: " + pairedDevice.getName());
@@ -146,14 +148,14 @@ public class MainActivity extends ActionBarActivity {
         }
         if (pairedDevices.size() > 0) {
             pairedDeviceArrayList = new ArrayList<BluetoothDevice>();
-
+           final List<String> s = new ArrayList<String>();
             for (BluetoothDevice device : pairedDevices) {
                 pairedDeviceArrayList.add(device);
-                Log.e("ssss", pairedDevices.toString());
+                s.add(device.getName());
             }
 
-            pairedDeviceAdapter = new ArrayAdapter<BluetoothDevice>(this,
-                    android.R.layout.simple_list_item_1, pairedDeviceArrayList);
+            pairedDeviceAdapter = new ArrayAdapter<String>(this,
+                    android.R.layout.simple_list_item_1, s);
             listViewPairedDevice.setAdapter(pairedDeviceAdapter);
 
             listViewPairedDevice.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -161,19 +163,28 @@ public class MainActivity extends ActionBarActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view,
                                         int position, long id) {
-                    BluetoothDevice device =
-                            (BluetoothDevice) parent.getItemAtPosition(position);
-                    Toast.makeText(MainActivity.this,
-                            "Name: " + device.getName() + "\n"
-                                    + "Address: " + device.getAddress() + "\n"
-                                    + "BondState: " + device.getBondState() + "\n"
-                                    + "BluetoothClass: " + device.getBluetoothClass() + "\n"
-                                    + "Class: " + device.getClass(),
-                            Toast.LENGTH_LONG).show();
+//                    BluetoothDevice device =
+//                            (BluetoothDevice) parent.getItemAtPosition(position);
+                    String selected = s.get(position);
+                    for (Iterator<BluetoothDevice> it = pairedDevices.iterator(); it.hasNext(); ) {
+                        BluetoothDevice bt = it.next();
 
-                    textStatus.setText("start ThreadConnectBTdevice");
-                    myThreadConnectBTdevice = new ThreadConnectBTdevice(device);
-                    myThreadConnectBTdevice.start();
+                        if (bt.getName().equals(selected)){
+
+                            myThreadConnectBTdevice = new ThreadConnectBTdevice(bt);
+                            myThreadConnectBTdevice.start();
+                            Log.d("log", "\tDevice MAC: " + bt);
+                        }
+                    }
+//                    Toast.makeText(MainActivity.this,
+//                            "Name: " + device.getName() + "\n"
+//                                    + "Address: " + device.getAddress() + "\n"
+//                                    + "BondState: " + device.getBondState() + "\n"
+//                                    + "BluetoothClass: " + device.getBluetoothClass() + "\n"
+//                                    + "Class: " + device.getClass(),
+//                            Toast.LENGTH_LONG).show();
+
+
                 }
             });
         }
@@ -225,7 +236,7 @@ public class MainActivity extends ActionBarActivity {
 
             try {
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(myUUID);
-                textStatus.setText("bluetoothSocket: \n" + bluetoothSocket);
+                textStatus.setText("Connecting...");
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -246,7 +257,7 @@ public class MainActivity extends ActionBarActivity {
 
                     @Override
                     public void run() {
-                        textStatus.setText("something wrong bluetoothSocket.connect(): \n" + eMessage);
+                        textStatus.setText("Connect fail");
                     }
                 });
 
@@ -260,9 +271,7 @@ public class MainActivity extends ActionBarActivity {
 
             if (success) {
                 //connect successful
-                final String msgconnected = "connect successful:\n"
-                        + "BluetoothSocket: " + bluetoothSocket + "\n"
-                        + "BluetoothDevice: " + bluetoothDevice;
+                final String msgconnected = "Connect successful";
 
                 runOnUiThread(new Runnable() {
 
@@ -593,8 +602,7 @@ public class MainActivity extends ActionBarActivity {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
 
-                    final String msgConnectionLost = "Connection lost:\n"
-                            + e.getMessage();
+                    final String msgConnectionLost = "Connection lost";
                     runOnUiThread(new Runnable() {
 
                         @Override
