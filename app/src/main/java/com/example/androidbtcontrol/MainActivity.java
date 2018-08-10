@@ -14,11 +14,15 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -47,7 +51,7 @@ import java.util.Set;
 import java.util.UUID;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     private static final int REQUEST_ENABLE_BT = 1;
 
@@ -72,6 +76,7 @@ public class MainActivity extends ActionBarActivity {
     ThreadConnected myThreadConnected;
      TextView tv;
      ImageView iv;
+     boolean looper = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -176,13 +181,6 @@ public class MainActivity extends ActionBarActivity {
                             Log.d("log", "\tDevice MAC: " + bt);
                         }
                     }
-//                    Toast.makeText(MainActivity.this,
-//                            "Name: " + device.getName() + "\n"
-//                                    + "Address: " + device.getAddress() + "\n"
-//                                    + "BondState: " + device.getBondState() + "\n"
-//                                    + "BluetoothClass: " + device.getBluetoothClass() + "\n"
-//                                    + "Class: " + device.getClass(),
-//                            Toast.LENGTH_LONG).show();
 
 
                 }
@@ -191,13 +189,22 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void onBackPressed() {
+        super.onBackPressed();
+
 
         if (myThreadConnectBTdevice != null) {
             myThreadConnectBTdevice.cancel();
+            Log.d("test", "Closed Thread");
         }
+        looper = false;
+        Intent intent = new Intent(this, MainMenuActivity.class);
+        startActivity(intent);
+        finish();
+
     }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -208,6 +215,8 @@ public class MainActivity extends ActionBarActivity {
                 Toast.makeText(this,
                         "BlueTooth NOT enabled",
                         Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, MainMenuActivity.class);
+                startActivity(intent);
                 finish();
             }
         }
@@ -245,6 +254,7 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void run() {
+
             boolean success = false;
             try {
                 bluetoothSocket.connect();
@@ -318,7 +328,9 @@ public class MainActivity extends ActionBarActivity {
             Toast.makeText(getApplicationContext(),
                     "close bluetoothSocket",
                     Toast.LENGTH_LONG).show();
-
+//            Intent intent = new Intent(MainActivity.this, MainMenuActivity.class);
+//            startActivity(intent);
+//            finish();
             try {
                 bluetoothSocket.close();
             } catch (IOException e) {
@@ -327,6 +339,7 @@ public class MainActivity extends ActionBarActivity {
             }
 
         }
+
 
     }
 
@@ -339,7 +352,18 @@ public class MainActivity extends ActionBarActivity {
         private final BluetoothSocket connectedBluetoothSocket;
         private final InputStream connectedInputStream;
         private final OutputStream connectedOutputStream;
+        private void customVibratePatternNoRepeat() {
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            // 0 : Start without a delay
+            // 400 : Vibrate for 400 milliseconds
+            // 200 : Pause for 200 milliseconds
+            // 400 : Vibrate for 400 milliseconds
+            long[] mVibratePattern = new long[]{0, 400, 200, 400};
 
+            // -1 : Do not repeat this pattern
+            // pass 0 if you want to repeat this pattern from 0th index
+            v.vibrate(mVibratePattern, -1);
+        }
         public ThreadConnected(BluetoothSocket socket) {
             connectedBluetoothSocket = socket;
             InputStream in = null;
@@ -362,16 +386,11 @@ public class MainActivity extends ActionBarActivity {
             byte[] buffer = new byte[1024];
             int bytes;
 
-            while (true) {
+            while (looper) {
                 try {
                     bytes = connectedInputStream.read(buffer);
                     final String strReceived = new String(buffer, 0, bytes);
-//                    final String msgReceived = String.valueOf(bytes) +
-//                            " bytes received:\n"
-//                            + strReceived;
-                    final String msgReceived = String.valueOf(bytes) +
-                            " bytes received:\n"
-                            + strReceived;
+
 
                     runOnUiThread(new Runnable() {
                         ///////recive
@@ -474,6 +493,9 @@ public class MainActivity extends ActionBarActivity {
                             }
                             if (strReceived.equals("L") && !play) {
                                 setContentView(R.layout.activity_notification);
+                                customVibratePatternNoRepeat();
+                                ConstraintLayout ll = (ConstraintLayout) findViewById(R.id.linearLayout);
+                                ll.setBackgroundResource(R.drawable.noti_l);
                                 textResult = (TextView) findViewById(R.id.textRes);
                                 textResult.setText("พลิกตัวไปทางซ้าย");
                                 if (!ringTone.isPlaying()) {
@@ -507,6 +529,9 @@ public class MainActivity extends ActionBarActivity {
                             }
                             if (strReceived.equals("M") && !play) {
                                 setContentView(R.layout.activity_notification);
+                                customVibratePatternNoRepeat();
+                                ConstraintLayout ll = (ConstraintLayout) findViewById(R.id.linearLayout);
+                                ll.setBackgroundResource(R.drawable.noti_c);
                                 textResult = (TextView) findViewById(R.id.textRes);
                                 textResult.setText("พลิกตัวท่านอนหงาย");
                                 if (!ringTone.isPlaying()) {
@@ -541,8 +566,12 @@ public class MainActivity extends ActionBarActivity {
 
                             if (strReceived.equals("R") && !play) {
                                 setContentView(R.layout.activity_notification);
+                                customVibratePatternNoRepeat();
+                                ConstraintLayout ll = (ConstraintLayout) findViewById(R.id.linearLayout);
+                                ll.setBackgroundResource(R.drawable.noti_l);
                                 textResult = (TextView) findViewById(R.id.textRes);
                                 textResult.setText("พลิกตัวไปทางขวา");
+
                                 if (!ringTone.isPlaying()) {
                                     ringTone.play();
                                 }else{
@@ -612,7 +641,9 @@ public class MainActivity extends ActionBarActivity {
                     });
                 }
             }
+
         }
+
 
         public void write(byte[] buffer) {
             try {
@@ -631,6 +662,8 @@ public class MainActivity extends ActionBarActivity {
                 e.printStackTrace();
             }
         }
+
     }
+
 
 }

@@ -1,8 +1,11 @@
 package com.example.androidbtcontrol;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -33,6 +36,7 @@ public class MainMenuActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent i = new Intent(MainMenuActivity.this, MainActivity.class);
                 startActivity(i);
+                finish();
             }
         });
 
@@ -87,7 +91,7 @@ public class MainMenuActivity extends AppCompatActivity {
     AdapterView.OnItemClickListener listViewClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Toast.makeText(MainMenuActivity.this, "POSITION:= " + position, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(MainMenuActivity.this, "POSITION:= " + position, Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(MainMenuActivity.this, ShowDetailActivity.class);
             intent.putExtra("resId", listDog.getDogs().get(position).getResId());
